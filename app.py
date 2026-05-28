@@ -25,7 +25,8 @@ class SessionFilter(logging.Filter):
         
         # Recupera o ID de sessão único gerado pelo Streamlit para o usuário atual
         ctx = get_script_run_ctx()
-        record.session_id = ctx.session_id if ctx else "N/A"
+        # Checagem segura: só acessa .session_id se o ctx realmente existir
+        record.session_id = ctx.session_id if (ctx and hasattr(ctx, 'session_id')) else "LOCAL"
         return True
 
 @st.cache_resource
@@ -132,9 +133,11 @@ def main():
             # Início do cronômetro para medir a latência da resposta
             start_time = time.time()
             
+            historical_past = prepare_gemini_history(st.session_state.messages[:-1])
+            
             chat = client.chats.create(
                 model=MODEL_NAME, 
-                history=gemini_history
+                history=historical_past
             )
             
             response = chat.send_message(user_input)
