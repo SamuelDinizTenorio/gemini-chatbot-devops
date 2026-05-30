@@ -124,20 +124,18 @@ def main():
         
         logger.info(f"Mensagem recebida. Tamanho do histórico local: {len(st.session_state.messages)} mensagens.")
         
-        # Conversão do histórico de mensagens
-        gemini_history = prepare_gemini_history(st.session_state.messages)
-        
         try:
             logger.info(f"Iniciando requisição à API (Modelo: {MODEL_NAME})")
             
             # Início do cronômetro para medir a latência da resposta
             start_time = time.time()
             
-            historical_past = prepare_gemini_history(st.session_state.messages[:-1])
+            # Converte o histórico contendo apenas o passado (exclui a mensagem atual do usuário)
+            gemini_history = prepare_gemini_history(st.session_state.messages[:-1])
             
             chat = client.chats.create(
                 model=MODEL_NAME, 
-                history=historical_past
+                history=gemini_history
             )
             
             response = chat.send_message(user_input)
